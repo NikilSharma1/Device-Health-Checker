@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "605682067604",
+    "project_id": "device-health-checker-f45be",
+    "storage_bucket": "device-health-checker-f45be.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:605682067604:android:6a6c552c8b550a4a166c81",
+        "android_client_info": {
+          "package_name": "com.example.devicehealthchecker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCFyJUF8x1B9RNXOK1G8Ttmkon0TQCDrqg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

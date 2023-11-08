@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".PrimaryMicrophoneActivity">
+
+    <Button
+        android:id="@+id/Funcbutton"
+        android:layout_width="147dp"
+        android:layout_height="108dp"
+        android:layout_marginStart="156dp"
+        android:layout_marginTop="416dp"
+        android:layout_marginEnd="156dp"
+        android:text="START"
+        android:textSize="24sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="121dp"
+        android:layout_marginTop="240dp"
+        android:layout_marginEnd="121dp"
+        android:gravity="center"
+        android:text="START RECORDING"
+        android:textSize="24sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/note"
+        android:layout_width="218dp"
+        android:layout_height="56dp"
+        android:layout_marginStart="118dp"
+        android:layout_marginTop="67dp"
+        android:layout_marginEnd="118dp"
+        android:gravity="center"
+        android:text="Press on button above for mentioned functionalites."
+        android:textSize="16sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/Funcbutton" />
+
+    <Button
+        android:id="@+id/MicYes"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="28dp"
+        android:layout_marginTop="452dp"
+        android:text="YES"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/MicNo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="25dp"
+        android:layout_marginTop="452dp"
+        android:text="NO"
+        android:visibility="gone"
+        app:layout_constraintStart_toEndOf="@+id/Funcbutton"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/confirm_textview"
+        android:layout_width="251dp"
+        android:layout_height="55dp"
+        android:layout_marginStart="86dp"
+        android:layout_marginTop="26dp"
+        android:visibility="gone"
+        android:layout_marginEnd="86dp"
+        android:gravity="center"
+        android:text="Is the sound clear to you?"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/status" />
+</androidx.constraintlayout.widget.ConstraintLayout>
