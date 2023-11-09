@@ -1,5 +1,8 @@
 package com.example.devicehealthchecker;
 
+import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
+import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
+
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
@@ -9,6 +12,9 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.res.ResourcesCompat;
+import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -21,13 +27,21 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Typeface;
+import android.graphics.pdf.PdfDocument;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.provider.Settings;
+import android.text.Layout;
+import android.text.StaticLayout;
+import android.text.TextPaint;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -36,14 +50,26 @@ import android.widget.Toast;
 
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.database.FirebaseDatabase;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class CheckerActivity extends AppCompatActivity implements DetailInterface {
     CustomAdapter customAdapter;
+    ResultsAdapter resultsAdapter;
+
     ArrayList<Checks> arrayList;
+    ArrayList<String> resultList;
     RecyclerView recyclerView;
+    RecyclerView test_recyclerview;
     LinearLayoutManager layoutManager;
+    LinearLayoutManager reslayoutManager;
     View recyclerview_item;
     Button check;
     Button skip;
@@ -51,23 +77,151 @@ public class CheckerActivity extends AppCompatActivity implements DetailInterfac
     TextView desc_textview;
     private static final int PERMISSION_REQUEST = 1;
 
+    Button firebase;
+    Button pdf;
+
+    FloatingActionButton floatingActionButton;
+
+    ArrayList<String> staticarraylist_Result;
+    ArrayList<String>testnames;
+
+    MutableLiveData<Integer> listen = new MutableLiveData<>();
+
+    int array_pos=8;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_checker);
+        askPermissions();
+        firebase=findViewById(R.id.firebase);
+        pdf=findViewById(R.id.pdf);
+        floatingActionButton=findViewById(R.id.floating);
+
         arrayList = new ArrayList<>();
+        resultList=new ArrayList<>();
+        staticarraylist_Result=new ArrayList<>();
+        testnames=new ArrayList<>();
+
         fillThelist();
 
         recyclerView = findViewById(R.id.chec_recyclerview);
+        test_recyclerview=findViewById(R.id.results_recyclerview);
+
         layoutManager = new LinearLayoutManager(this);
+        reslayoutManager = new LinearLayoutManager(this);
         //arrayList.add("ROOT");
         customAdapter = new CustomAdapter(this, arrayList, this);
+        resultsAdapter=new ResultsAdapter(this,resultList);
+
         recyclerView.setLayoutManager(layoutManager);
+        test_recyclerview.setLayoutManager(reslayoutManager);
+
         recyclerView.setAdapter(customAdapter);
+        test_recyclerview.setAdapter(resultsAdapter);
+
         customAdapter.notifyDataSetChanged();
+        Fields.COUNT=0;
+        listen.setValue(Fields.COUNT); //Initilize with a value
+
+        listen.observe(this,new Observer<Integer>() {
+            @Override
+            public void onChanged(Integer changedValue) {
+                //Toast.makeText(getApplicationContext(),String.valueOf(changedValue),Toast.LENGTH_SHORT).show();
+                if(changedValue==9){
+
+                    floatingActionButton.performClick();
+                }
+            }
+        });
+        //resultsAdapter.notifyDataSetChanged();
+        onclick();
 
     }
+    private void askPermissions(){
+        ActivityCompat.requestPermissions(CheckerActivity.this, new String[]{WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE}, PackageManager.PERMISSION_GRANTED);
+    }
+    private void onclick(){
+        firebase.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                HashMap<String ,Object> hashMap=new HashMap<>();
+                for(int i=0; i<9; i++){
+                    hashMap.put(testnames.get(i),staticarraylist_Result.get(i));
+                }
+                FirebaseDatabase firebaseDatabase=FirebaseDatabase.getInstance();
+                firebaseDatabase.getReference().setValue(hashMap);
+                Intent intent=new Intent(CheckerActivity.this,PerformActivity.class);
+                startActivity(intent);
+                finish();
+            }
+        });
+        pdf.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ActivityCompat.requestPermissions(CheckerActivity.this, new String[]{WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE}, PackageManager.PERMISSION_GRANTED);
 
+
+
+
+                PdfDocument pdfDocument = new PdfDocument();
+                PdfDocument.PageInfo pageInfo=new PdfDocument.PageInfo.Builder(1040,1980,1).create();
+                PdfDocument.Page page=pdfDocument.startPage(pageInfo);
+                Canvas canvas=page.getCanvas();
+                Paint paint=new Paint();
+                paint.setColor(getResources().getColor(R.color.black));
+                paint.setTextSize(62);
+                String tes_repo="TEST REPORT";
+                float x=400;
+                float y=100;
+                canvas.drawText(tes_repo,x,y,paint);
+                x=100;
+                y=300;
+                String text = "";
+                paint.setTextSize(42);
+                for(int i=0; i<9; i++){
+                    text=testnames.get(i)+" : "+staticarraylist_Result.get(i);
+                    canvas.drawText(text,x,y,paint);
+                    y+=100;
+                }
+
+                pdfDocument.finishPage(page);
+                File downloaddir=Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                String filename="New.pdf";
+                File file=new File(downloaddir,filename);
+                try {
+                    FileOutputStream fileOutputStream=new FileOutputStream(file);
+                    pdfDocument.writeTo(fileOutputStream);
+                    pdfDocument.close();
+                    fileOutputStream.close();
+                } catch (FileNotFoundException e) {
+                    Toast.makeText(getApplicationContext(),"Some Error Occured. Please try again.",Toast.LENGTH_SHORT).show();
+                } catch (IOException e) {
+                    Toast.makeText(getApplicationContext(),"Some Error Occured. Please try again.",Toast.LENGTH_SHORT).show();
+                }
+                Intent intent=new Intent(CheckerActivity.this,PerformActivity.class);
+                startActivity(intent);
+                finish();
+            }
+
+        });
+        floatingActionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(Fields.COUNT==9){
+                    for(int i=0; i<9; i++){
+                        resultList.add(testnames.get(i)+" : "+staticarraylist_Result.get(i));
+                    }
+                    recyclerView.setVisibility(View.GONE);
+                    test_recyclerview.setVisibility(View.VISIBLE);
+                    firebase.setVisibility(View.VISIBLE);
+                    pdf.setVisibility(View.VISIBLE);
+                    floatingActionButton.setVisibility(View.INVISIBLE);
+                }else{
+                    genericAlertDialog("Please perform either of the two actions for all the tests. 1.CHECK or 2.SKIP");
+                }
+            }
+        });
+    }
     private void fillThelist() {
         if (arrayList.size() > 0) return;
         arrayList.add(new Checks("ROOT", "Check if your device is Rooted or not"));
@@ -79,10 +233,32 @@ public class CheckerActivity extends AppCompatActivity implements DetailInterfac
         arrayList.add(new Checks("ACCELEROMETER", "Check if your accerlerometer is working fine or not"));
         arrayList.add(new Checks("GYROSCOPE", "Check if your gyroscope is working fine or not"));
         arrayList.add(new Checks("GPS", "Check if your GPS is working fine or not"));
+
+        staticarraylist_Result.add("STATUS UNKNOWN");
+        staticarraylist_Result.add("STATUS UNKNOWN");
+        staticarraylist_Result.add("STATUS UNKNOWN");
+        staticarraylist_Result.add("STATUS UNKNOWN");
+        staticarraylist_Result.add("STATUS UNKNOWN");
+        staticarraylist_Result.add("STATUS UNKNOWN");
+        staticarraylist_Result.add("STATUS UNKNOWN");
+        staticarraylist_Result.add("STATUS UNKNOWN");
+        staticarraylist_Result.add("STATUS UNKNOWN");
+
+        testnames.add("ROOT");
+        testnames.add("MAIN CAMERA");
+        testnames.add("SELFIE CAMERA");
+        testnames.add("PRIMARY MICROPHONE");
+        testnames.add("SECONDARY MICROPHONE");
+        testnames.add("BLUETOOTH");
+        testnames.add("ACCELEROMETER");
+        testnames.add("GYROSCOPE");
+        testnames.add("GPS");
+
     }
 
     @Override
     public void sendDetail(int position) {
+        array_pos=position;
         recyclerview_item = recyclerView.getLayoutManager().findViewByPosition(position);
         skip = recyclerview_item.findViewById(R.id.skip);
         test_textview = recyclerview_item.findViewById(R.id.check_name);
@@ -97,23 +273,69 @@ public class CheckerActivity extends AppCompatActivity implements DetailInterfac
             public void onClick(View view) {
                 if (name.equals("ROOT")) {
                     checkRootStatus();
+                    if(staticarraylist_Result.get(position).equals("STATUS UNKNOWN"));
+                    Fields.COUNT++;
+                    listen.setValue(Fields.COUNT);
                 } else if (name.equals("MAIN CAMERA")) {
+
                     checkMainCamera();
+                    if(staticarraylist_Result.get(position).equals("STATUS UNKNOWN"));
+                    Fields.COUNT++;
+                    listen.setValue(Fields.COUNT);
                 } else if (name.equals("SELFIE CAMERA")) {
+
                     checkSelfieCamera();
+                    if(staticarraylist_Result.get(position).equals("STATUS UNKNOWN"));
+                    Fields.COUNT++;
+                    listen.setValue(Fields.COUNT);
                 } else if (name.equals("PRIMARY MICROPHONE")) {
+
                     checkPrimaryMicrophone();
+                    if(staticarraylist_Result.get(position).equals("STATUS UNKNOWN"));
+                    Fields.COUNT++;
+                    listen.setValue(Fields.COUNT);
                 } else if (name.equals("SECONDARY MICROPHONE")) {
+
                     checkSecondaryMircophone();
+                    if(staticarraylist_Result.get(position).equals("STATUS UNKNOWN"));
+                    Fields.COUNT++;
+                    listen.setValue(Fields.COUNT);
                 } else if (name.equals("BLUETOOTH")) {
+
                     checkBluetooth();
+                    if(staticarraylist_Result.get(position).equals("STATUS UNKNOWN"));
+                    Fields.COUNT++;
+                    listen.setValue(Fields.COUNT);
                 } else if (name.equals("ACCELEROMETER")) {
+
                     checkAccelerometer();
+                    if(staticarraylist_Result.get(position).equals("STATUS UNKNOWN"));
+                    Fields.COUNT++;
+                    listen.setValue(Fields.COUNT);
                 } else if (name.equals("GYROSCOPE")) {
+
                     checkGyroscope();
+                    if(staticarraylist_Result.get(position).equals("STATUS UNKNOWN"));
+                    Fields.COUNT++;
+                    listen.setValue(Fields.COUNT);
                 } else if (name.equals("GPS")) {
+
                     checkGPS();
+                    if(staticarraylist_Result.get(position).equals("STATUS UNKNOWN"));
+                    Fields.COUNT++;
+                    listen.setValue(Fields.COUNT);
                 }
+            }
+        });
+        skip.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                Testfailed(name+" FAILED");
+                if(staticarraylist_Result.get(position).equals("STATUS UNKNOWN"));
+                Fields.COUNT++;
+                listen.setValue(Fields.COUNT);
+                staticarraylist_Result.set(position,"SKIPPED");
             }
         });
     }
@@ -128,12 +350,8 @@ public class CheckerActivity extends AppCompatActivity implements DetailInterfac
 //            }
             if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                 //Toast.makeText(getApplicationContext(),"Yes Gps is enabled ",Toast.LENGTH_SHORT).show();
-                MaterialCardView check_card = recyclerview_item.findViewById(R.id.card_view);
-                check_card.setStrokeColor(getResources().getColor(R.color.green));
-                desc_textview.setText("GPS is enabled");
-                desc_textview.setTextColor(getColor(R.color.green));
-                check.setVisibility(View.GONE);
-                skip.setVisibility(View.GONE);
+                staticarraylist_Result.set(8,"PASSED");
+                TestSuccessful("GPS IS ENABLED");
             } else {
                 //Toast.makeText(getApplicationContext(),"No Gps is not enabled ",Toast.LENGTH_SHORT).show();
                 AlertDialog.Builder builder = new MaterialAlertDialogBuilder(CheckerActivity.this)
@@ -148,6 +366,7 @@ public class CheckerActivity extends AppCompatActivity implements DetailInterfac
                         .setNegativeButton("Fail", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
+                                staticarraylist_Result.set(8,"FAILED");
                                 Testfailed("GPS TEST FAILED");
                             }
                         });
@@ -184,11 +403,14 @@ public class CheckerActivity extends AppCompatActivity implements DetailInterfac
 //                            Log.i("infoooo",o.getData().getStringExtra("RESULT_OK"));
 //                            Toast.makeText(getApplicationContext(),o.getData().getStringExtra("RESULT_OK"),Toast.LENGTH_SHORT).show();
                             if(o.getData().getStringExtra("RESULT_OK").equals("true")){
+                                staticarraylist_Result.set(7,"PASSED");
                                 TestSuccessful("Gyroscope Test PASSED.");
                             }else{
+                                staticarraylist_Result.set(7,"FAILED");
                                 Testfailed("Gyroscope Test Failed");
                             }
                         } catch (Exception e) {
+                            staticarraylist_Result.set(7,"FAILED");
                             Testfailed("Gyroscope Test Failed");
                         }
 
@@ -212,11 +434,14 @@ public class CheckerActivity extends AppCompatActivity implements DetailInterfac
 //                            Log.i("infoooo",o.getData().getStringExtra("RESULT_OK"));
 //                            Toast.makeText(getApplicationContext(),o.getData().getStringExtra("RESULT_OK"),Toast.LENGTH_SHORT).show();
                             if(o.getData().getStringExtra("RESULT_OK").equals("true")){
+                                staticarraylist_Result.set(6,"PASSED");
                                 TestSuccessful("Accelerometer Test PASSED.");
                             }else{
+                                staticarraylist_Result.set(6,"FAILED");
                                 Testfailed("Acceleromter Test Failed");
                             }
                         } catch (Exception e) {
+                            staticarraylist_Result.set(6,"FAILED");
                             Testfailed("Acceleromter Test Failed");
                         }
 
@@ -245,6 +470,7 @@ public class CheckerActivity extends AppCompatActivity implements DetailInterfac
                     openSomeActivityForResult();
                 }
             } else {
+               staticarraylist_Result.set(5,"PASSED");
                TestSuccessful("Bluetooth is working fine.");
             }
 
@@ -262,6 +488,7 @@ public class CheckerActivity extends AppCompatActivity implements DetailInterfac
                         .setNegativeButton("Fail", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
+                                staticarraylist_Result.set(5,"FAILED");
                                 bluetoothError();
                             }
                         });
@@ -314,9 +541,11 @@ public class CheckerActivity extends AppCompatActivity implements DetailInterfac
                 @Override
                 public void onActivityResult(ActivityResult result) {
                     if (result.getResultCode() == 1) {
+                        staticarraylist_Result.set(5,"PASSED");
                         //Toast.makeText(getApplicationContext(),String.valueOf(result.getResultCode())+" + "+String.valueOf(Activity.RESULT_OK),Toast.LENGTH_SHORT).show();
                         TestSuccessful("Bluetooth works fine.");
                     }else{
+                        staticarraylist_Result.set(5,"FAILED");
 //                        Toast.makeText(getApplicationContext(),String.valueOf(result.getResultCode())+" + "+String.valueOf(Activity.RESULT_OK),Toast.LENGTH_SHORT).show();
 //                        Toast.makeText(getApplicationContext(),"2",Toast.LENGTH_SHORT).show();
                         displayDialogForDeclinedBluetoothPerm();
@@ -334,6 +563,7 @@ public class CheckerActivity extends AppCompatActivity implements DetailInterfac
                         .setNegativeButton("FAIL", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
+                                staticarraylist_Result.set(4,"FAILED");
                                 Testfailed("Secondary Mic Test FAILED");
                                 dialogInterface.dismiss();
                             }
@@ -353,11 +583,15 @@ public class CheckerActivity extends AppCompatActivity implements DetailInterfac
                         break;
                     case(1):
                         //Log.d(TAG, "Headset plugged");
-                        if(test_textview.getText().toString().equals("SECONDARY MICROPHONE"))
-                        TestSuccessful("External Mic Test PASSED");
+                        if(test_textview.getText().toString().equals("SECONDARY MICROPHONE")) {
+                            staticarraylist_Result.set(4,"PASSED");
+                            TestSuccessful("External Mic Test PASSED");
+                        }
                         break;
-                    default:
+                    default: {
+                        staticarraylist_Result.set(4,"FAILED");
                         Testfailed("External Mic Test FAILED");
+                    }
                 }
             }
         }
@@ -380,15 +614,19 @@ public class CheckerActivity extends AppCompatActivity implements DetailInterfac
 //                            Log.i("infoooo",o.getData().getStringExtra("RESULT_OK"));
 //                            Toast.makeText(getApplicationContext(),o.getData().getStringExtra("RESULT_OK"),Toast.LENGTH_SHORT).show();
                             if(result.getData().getStringExtra("RESULT_OK").equals("true")){
+                                staticarraylist_Result.set(3,"PASSED");
                                 TestSuccessful("Primary Mic Test PASSED.");
                             }else{
+                                staticarraylist_Result.set(3,"FAILED");
                                 Testfailed("Primary Mic Test Failed");
                             }
                         } catch (Exception e) {
+                            staticarraylist_Result.set(3,"FAILED");
                             Testfailed("Primary Mic Test Failed");
                         }
 
                     }else{
+                        staticarraylist_Result.set(3,"FAILED");
                         Testfailed("Primary Mic Failed");
                     }
                 }
@@ -411,15 +649,19 @@ public class CheckerActivity extends AppCompatActivity implements DetailInterfac
 //                            Log.i("infoooo",o.getData().getStringExtra("RESULT_OK"));
 //                            Toast.makeText(getApplicationContext(),o.getData().getStringExtra("RESULT_OK"),Toast.LENGTH_SHORT).show();
                             if(result.getData().getStringExtra("RESULT_OK").equals("true")){
+                                staticarraylist_Result.set(2,"PASSED");
                                 TestSuccessful("Front Camera Test PASSED.");
                             }else{
+                                staticarraylist_Result.set(2,"FAILED");
                                 Testfailed("Front Camera Test Failed");
                             }
                         } catch (Exception e) {
+                            staticarraylist_Result.set(2,"FAILED");
                             Testfailed("Front Camera Test Failed");
                         }
 
                     }else{
+                        staticarraylist_Result.set(2,"FAILED");
                         Testfailed("Front Camera Test Failed");
                     }
                 }
@@ -442,26 +684,37 @@ public class CheckerActivity extends AppCompatActivity implements DetailInterfac
 //                            Log.i("infoooo",o.getData().getStringExtra("RESULT_OK"));
 //                            Toast.makeText(getApplicationContext(),o.getData().getStringExtra("RESULT_OK"),Toast.LENGTH_SHORT).show();
                             if(result.getData().getStringExtra("RESULT_OK").equals("true")){
+                                staticarraylist_Result.set(1,"PASSED");
                                 TestSuccessful("Rear Camera Test PASSED.");
                             }else{
+                                staticarraylist_Result.set(1,"FAILED");
                                 Testfailed("Rear Camera Test Failed");
                             }
                         } catch (Exception e) {
+                            staticarraylist_Result.set(1,"FAILED");
                             Testfailed("Rear Camera Test Failed");
                         }
 
                     }else{
+                        staticarraylist_Result.set(1,"FAILED");
                         Testfailed("Rear Camera Test Failed");
                     }
                 }
             });
 
     private void checkRootStatus() {
+        if( RootUtil.isDeviceRooted()){
+            staticarraylist_Result.set(0,"PASSED");
+            TestSuccessful("DEVICE IS ROOTED");
+        }else{
+            staticarraylist_Result.set(0,"PASSED");
+            TestSuccessful("DEVICE IS NOT ROOTED");
+        }
     }
-//    private void genericAlertDialog(String Sensor){
-//        AlertDialog.Builder builder = new MaterialAlertDialogBuilder(CheckerActivity.this)
-//                .setTitle("Suggestions")
-//                .setMessage("This Device Doesn't Support "+sensor+" sensor");
-//        builder.show();
-//    }
+    private void genericAlertDialog(String string){
+        AlertDialog.Builder builder = new MaterialAlertDialogBuilder(CheckerActivity.this)
+                .setTitle("Suggestions")
+                .setMessage(string);
+        builder.show();
+    }
 }
