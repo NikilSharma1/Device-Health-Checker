@@ -39,29 +39,25 @@
     <Button
         android:id="@+id/firebase"
         android:visibility="gone"
-        android:layout_width="145dp"
-        android:layout_height="66dp"
-        android:layout_marginStart="141dp"
-        android:layout_marginTop="508dp"
-        android:layout_marginEnd="141dp"
-        android:text="Send data to Firebase"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Save on Server"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintHorizontal_bias="0.501"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/results_recyclerview" />
+        tools:layout_editor_absoluteY="592dp"
+        app:layout_constraintBottom_toTopOf="@id/pdf"/>
 
     <Button
         android:id="@+id/pdf"
         android:visibility="gone"
-        android:layout_width="145dp"
-        android:layout_height="66dp"
-        android:layout_marginStart="141dp"
-        android:layout_marginTop="612dp"
-        android:layout_marginEnd="141dp"
-        android:text="Save PDF"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Save PDF File"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintHorizontal_bias="0.501"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/results_recyclerview" />
+        tools:layout_editor_absoluteY="529dp"
+        app:layout_constraintBottom_toBottomOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

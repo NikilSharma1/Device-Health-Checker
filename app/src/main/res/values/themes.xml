@@ -1,9 +1,12 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Base.Theme.DeviceHealthChecker" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Base.Theme.DeviceHealthChecker" parent="Theme.Material3.Light">
         <item name="android:fontFamily">sans-serif-light</item>
         <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+         <item name="colorPrimary">@color/red</item>
+    </style>
+    <style name="main_activity_theme" parent="Theme.Material3.DayNight.NoActionBar">
+
     </style>
 
     <style name="Theme.DeviceHealthChecker" parent="Base.Theme.DeviceHealthChecker" />

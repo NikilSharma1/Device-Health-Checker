@@ -30,6 +30,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.pdf.PdfDocument;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
@@ -92,6 +93,11 @@ public class CheckerActivity extends AppCompatActivity implements DetailInterfac
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_checker);
+
+        ColorDrawable colorDrawable
+                = new ColorDrawable(getColor(R.color.red));
+        getSupportActionBar().setBackgroundDrawable(colorDrawable);
+
         askPermissions();
         firebase=findViewById(R.id.firebase);
         pdf=findViewById(R.id.pdf);
@@ -121,18 +127,18 @@ public class CheckerActivity extends AppCompatActivity implements DetailInterfac
 
         customAdapter.notifyDataSetChanged();
         Fields.COUNT=0;
-        listen.setValue(Fields.COUNT); //Initilize with a value
-
-        listen.observe(this,new Observer<Integer>() {
-            @Override
-            public void onChanged(Integer changedValue) {
-                //Toast.makeText(getApplicationContext(),String.valueOf(changedValue),Toast.LENGTH_SHORT).show();
-                if(changedValue==9){
-
-                    floatingActionButton.performClick();
-                }
-            }
-        });
+//        listen.setValue(Fields.COUNT); //Initilize with a value
+//
+//        listen.observe(this,new Observer<Integer>() {
+//            @Override
+//            public void onChanged(Integer changedValue) {
+//                //Toast.makeText(getApplicationContext(),String.valueOf(changedValue),Toast.LENGTH_SHORT).show();
+//                if(changedValue==9){
+//
+//                    floatingActionButton.performClick();
+//                }
+//            }
+//        });
         //resultsAdapter.notifyDataSetChanged();
         onclick();
 
@@ -207,7 +213,7 @@ public class CheckerActivity extends AppCompatActivity implements DetailInterfac
         floatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(Fields.COUNT==9){
+                if(Fields.COUNT>=9){
                     for(int i=0; i<9; i++){
                         resultList.add(testnames.get(i)+" : "+staticarraylist_Result.get(i));
                     }
@@ -275,55 +281,55 @@ public class CheckerActivity extends AppCompatActivity implements DetailInterfac
                     checkRootStatus();
                     if(staticarraylist_Result.get(position).equals("STATUS UNKNOWN"));
                     Fields.COUNT++;
-                    listen.setValue(Fields.COUNT);
+                    //listen.setValue(Fields.COUNT);
                 } else if (name.equals("MAIN CAMERA")) {
 
                     checkMainCamera();
                     if(staticarraylist_Result.get(position).equals("STATUS UNKNOWN"));
                     Fields.COUNT++;
-                    listen.setValue(Fields.COUNT);
+                    //listen.setValue(Fields.COUNT);
                 } else if (name.equals("SELFIE CAMERA")) {
 
                     checkSelfieCamera();
                     if(staticarraylist_Result.get(position).equals("STATUS UNKNOWN"));
                     Fields.COUNT++;
-                    listen.setValue(Fields.COUNT);
+                    //listen.setValue(Fields.COUNT);
                 } else if (name.equals("PRIMARY MICROPHONE")) {
 
                     checkPrimaryMicrophone();
                     if(staticarraylist_Result.get(position).equals("STATUS UNKNOWN"));
                     Fields.COUNT++;
-                    listen.setValue(Fields.COUNT);
+                    //listen.setValue(Fields.COUNT);
                 } else if (name.equals("SECONDARY MICROPHONE")) {
 
                     checkSecondaryMircophone();
                     if(staticarraylist_Result.get(position).equals("STATUS UNKNOWN"));
                     Fields.COUNT++;
-                    listen.setValue(Fields.COUNT);
+                    //listen.setValue(Fields.COUNT);
                 } else if (name.equals("BLUETOOTH")) {
 
                     checkBluetooth();
                     if(staticarraylist_Result.get(position).equals("STATUS UNKNOWN"));
                     Fields.COUNT++;
-                    listen.setValue(Fields.COUNT);
+                    //listen.setValue(Fields.COUNT);
                 } else if (name.equals("ACCELEROMETER")) {
 
                     checkAccelerometer();
                     if(staticarraylist_Result.get(position).equals("STATUS UNKNOWN"));
                     Fields.COUNT++;
-                    listen.setValue(Fields.COUNT);
+                    //listen.setValue(Fields.COUNT);
                 } else if (name.equals("GYROSCOPE")) {
 
                     checkGyroscope();
                     if(staticarraylist_Result.get(position).equals("STATUS UNKNOWN"));
                     Fields.COUNT++;
-                    listen.setValue(Fields.COUNT);
+                    //listen.setValue(Fields.COUNT);
                 } else if (name.equals("GPS")) {
 
                     checkGPS();
                     if(staticarraylist_Result.get(position).equals("STATUS UNKNOWN"));
                     Fields.COUNT++;
-                    listen.setValue(Fields.COUNT);
+                    //listen.setValue(Fields.COUNT);
                 }
             }
         });
@@ -334,7 +340,7 @@ public class CheckerActivity extends AppCompatActivity implements DetailInterfac
                 Testfailed(name+" FAILED");
                 if(staticarraylist_Result.get(position).equals("STATUS UNKNOWN"));
                 Fields.COUNT++;
-                listen.setValue(Fields.COUNT);
+                //listen.setValue(Fields.COUNT);
                 staticarraylist_Result.set(position,"SKIPPED");
             }
         });

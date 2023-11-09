@@ -62,9 +62,9 @@ public class PrimaryMicrophoneActivity extends AppCompatActivity {
         }
         else {
             //startCamera();
-
+            onclick();
         }
-        onclick();
+
 
     }
     public void onclick(){
@@ -146,7 +146,7 @@ public class PrimaryMicrophoneActivity extends AppCompatActivity {
 
     private void startRecording() {
         recorder = new MediaRecorder();
-        recorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
+        recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         recorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
         recorder.setOutputFile(fileName);
         recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
@@ -173,8 +173,7 @@ public class PrimaryMicrophoneActivity extends AppCompatActivity {
                     if (ContextCompat.checkSelfPermission(this,
                             Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
                         Toast.makeText(this, "Permission Granted", Toast.LENGTH_SHORT).show();
-
-
+                        onclick();
                     }
                 } else {
                     Toast.makeText(this, "Permission Denied", Toast.LENGTH_SHORT).show();
