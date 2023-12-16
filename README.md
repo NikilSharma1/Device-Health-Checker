@@ -5,7 +5,7 @@ startup page icon : <a href="https://www.flaticon.com/free-icons/health" title="
 perfrom activity page icon : <a href="https://www.flaticon.com/free-icons/criteria" title="criteria icons">Criteria icons created by Eucalyp - Flaticon</a>
 
 
-Video Explanation the App with all the functions being performed.
+Video Explanation of the App with all the functions being performed.
 
 
 
